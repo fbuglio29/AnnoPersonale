@@ -1,0 +1,40 @@
+name: Build iOS IPA
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-14
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '15.4'
+
+      - name: Build iOS App (.app & .ipa)
+        run: |
+          xcodebuild build \
+            -project AnnoPersonale.xcodeproj \
+            -scheme AnnoPersonale \
+            -sdk iphoneos \
+            -configuration Release \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            BUILD_DIR=../build
+
+          cd ../build/Release-iphoneos
+          mkdir Payload
+          cp -r AnnoPersonale.app Payload/
+          zip -r AnnoPersonale.ipa Payload
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AnnoPersonale-iOS-IPA
+          path: build/Release-iphoneos/AnnoPersonale.ipa
