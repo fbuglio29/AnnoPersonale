@@ -19,16 +19,18 @@ jobs:
 
       - name: Build iOS App (.app & .ipa)
         run: |
+          PROJ_PATH=$(find . -name "*.xcodeproj" -maxdepth 2 | head -n 1)
+          echo "Trovato progetto in: $PROJ_PATH"
           xcodebuild build \
-            -project AnnoPersonale.xcodeproj \
+            -project "$PROJ_PATH" \
             -scheme AnnoPersonale \
             -sdk iphoneos \
             -configuration Release \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            BUILD_DIR=../build
+            BUILD_DIR=build
 
-          cd ../build/Release-iphoneos
+          cd build/Release-iphoneos
           mkdir Payload
           cp -r AnnoPersonale.app Payload/
           zip -r AnnoPersonale.ipa Payload
