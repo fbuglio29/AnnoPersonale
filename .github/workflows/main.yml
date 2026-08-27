@@ -19,11 +19,20 @@ jobs:
 
       - name: Build iOS App (.app & .ipa)
         run: |
-          PROJ_PATH=$(find . -name "*.xcodeproj" -maxdepth 2 | head -n 1)
-          echo "Trovato progetto in: $PROJ_PATH"
+          PROJ_PATH=$(find . -name "*.xcodeproj" -maxdepth 3 | head -n 1)
+          echo "Found project: $PROJ_PATH"
+          
+          if [ -z "$PROJ_PATH" ]; then
+            echo "Error: No .xcodeproj found in repository!"
+            exit 1
+          fi
+          
+          SCHEME=$(xcodebuild -project "$PROJ_PATH" -list | grep -A 10 "Schemes:" | tail -n +2 | head -n 1 | xargs)
+          echo "Found scheme: $SCHEME"
+          
           xcodebuild build \
             -project "$PROJ_PATH" \
-            -scheme AnnoPersonale \
+            -scheme "$SCHEME" \
             -sdk iphoneos \
             -configuration Release \
             CODE_SIGNING_ALLOWED=NO \
@@ -31,8 +40,8 @@ jobs:
             BUILD_DIR=build
 
           cd build/Release-iphoneos
-          mkdir Payload
-          cp -r AnnoPersonale.app Payload/
+          mkdir -p Payload
+          cp -r *.app Payload/
           zip -r AnnoPersonale.ipa Payload
 
       - name: Upload IPA Artifact
